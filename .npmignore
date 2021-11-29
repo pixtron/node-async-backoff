@@ -1,4 +1,3 @@
-!.gitkeep
 .DS_STORE
 *.log
 npm-debug.log*
@@ -10,7 +9,6 @@ pids
 *.pid
 *.seed
 *.pid.lock
-node_modules/
 .npm
 .eslintcache
 .node_repl_history
@@ -19,4 +17,6 @@ node_modules/
 .env
 .env.test
 .cache
-dist
+index.ts
+tsconfig.json
+.nvmrc

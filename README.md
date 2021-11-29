@@ -12,8 +12,9 @@ For example errors like  `ENOTFOUND`, `EHOSTUNREACH` etc. on network calls or
 
 ## Usage
 
+### Javascript
 ```js
-const backoff = require('@pxtrn/async-backoff');
+const { backoff } = require('@pxtrn/async-backoff');
 
 let counter = 1;
 
@@ -34,10 +35,44 @@ async function request() {
   try {
     const result = await backoff(request, {maxAttempts: 5, retryTimeout: 100});
   } catch(err) {
-    console.error('Could not request resource');
+    console.error(`Could not request resource`);
   }
 })();
 ```
+
+### Typescript
+```js
+import { backoff } from '@pxtrn/async-backoff';
+
+let counter = 1;
+
+interface IUser {name: string; email: string};
+
+async function request(): Promise<IUser> {
+  console.log(`request number: ${counter}`);
+
+  if(counter < 5) {
+    counter ++;
+    throw new Error('Some Network error');
+  }
+
+  console.log(`successfully requestd resource`);
+  return {name: 'Bob', email: 'bob@example.com'};
+}
+
+
+(async function() {
+  try {
+    const result = await backoff<IUser>(request, {maxAttempts: 5, retryTimeout: 100});
+    console.log('Got result', result);
+  } catch(err) {
+    console.error(`Could not request resource`);
+  }
+})();
+
+
+```
+
 
 #### Parameters
 
@@ -57,7 +92,7 @@ async function request() {
 ```js
 await backoff(request, {
   maxAttempts: 5,
-  retryStrategy: function(err) {
+  retryStrategy: (err) => {
     const retryErrors = ['ECONNRESET', 'ENOTFOUND', 'ESOCKETTIMEDOUT'];
     return retryErrors.includes(err.code);
   }
@@ -69,8 +104,8 @@ await backoff(request, {
 ```js
 await backoff(request, {
   maxAttempts: 5,
-  delayStrategy: function(attempts) {
-    return (Math.pow(2, attempts) * 100);
+  delayStrategy: (attempts) => {
+    return Math.min((Math.pow(2, attempts) * 100), 5e3);
   }
 });
 ```

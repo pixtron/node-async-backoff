@@ -2,9 +2,11 @@
   "name": "@pxtrn/async-backoff",
   "version": "2.0.0",
   "description": "Backoff failing async calls",
-  "main": "index.js",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc"
   },
   "repository": {
     "type": "git",
@@ -15,5 +17,10 @@
   "bugs": {
     "url": "https://github.com/pixtron/node-async-backoff/issues"
   },
-  "homepage": "https://github.com/pixtron/node-async-backoff#readme"
+  "homepage": "https://github.com/pixtron/node-async-backoff#readme",
+  "devDependencies": {
+    "@tsconfig/node16": "^1.0.2",
+    "@types/node": "^16.11.10",
+    "typescript": "^4.5.2"
+  }
 }
