@@ -8,7 +8,7 @@ const timeout = (ms: number, signal?: AbortSignal) => {
       signal.addEventListener('abort', () => {
         clearTimeout(timeout);
         reject(abortError());
-      }, {once: true});
+      }, { once: true });
     }
   });
 }
@@ -18,16 +18,14 @@ const abortError = () => new Error('The operation was aborted')
 export interface BackoffOptions {
   maxAttempts: number; // maximum attempts an errornous async call should be retried
   retryTimeout: number; // timeout in ms multiplied with attempts
-  retryStrategy?: (err: any) => boolean,
+  retryStrategy?: (err: unknown) => boolean,
   delayStrategy?: (attempts: number) => number,
   signal?: AbortSignal,
 }
 
-type TFn<T = any> = (...args: any[]) => Promise<T>
-
 class Backoff {
   protected _options: BackoffOptions;
-  protected _attempts: number = 0;
+  protected _attempts = 0;
 
   constructor(options: Partial<BackoffOptions>) {
     this._options = {
@@ -37,7 +35,7 @@ class Backoff {
     };
   }
 
-  retryStrategy(err: any) {
+  retryStrategy(err: unknown) {
     const { retryStrategy } = this._options;
 
     if (retryStrategy && typeof retryStrategy === 'function') {
@@ -57,17 +55,17 @@ class Backoff {
     }
   }
 
-  async tryUntilFail<T = any>(fn: TFn<T>): Promise<T> {
+  async tryUntilFail<T>(fn: (...args: unknown[]) => Promise<T>): Promise<T> {
     const signal = this._options.signal;
     let shouldRetry = true;
-    let err: any;
+    let err: unknown;
 
     if (signal !== undefined) {
       // @ts-ignore: https://github.com/DefinitelyTyped/DefinitelyTyped/discussions/57805
       signal.addEventListener('abort', () => {
         shouldRetry = false;
         err = abortError();
-      }, {once: true});
+      }, { once: true });
     }
 
     while (shouldRetry) {
@@ -94,7 +92,7 @@ class Backoff {
   }
 }
 
-export const backoff = async function<T = any>(fn: TFn<T>, options: BackoffOptions): Promise<T> {
+export const backoff = async function<T>(fn: (...args: unknown[]) => Promise<T>, options: BackoffOptions): Promise<T> {
  if (typeof fn !== 'function') throw new Error('backoff requires a function as first parameter');
 
  const backoff = new Backoff(options);
