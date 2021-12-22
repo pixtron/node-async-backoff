@@ -77,9 +77,8 @@ class Backoff {
         const result = await fn();
         return result;
       } catch(e) {
-        if (shouldRetry && this._attempts < this._options.maxAttempts && this.retryStrategy(e)) {
-          if (signal?.aborted) throw abortError();
-
+        if (signal?.aborted) throw abortError();
+        if (this._attempts < this._options.maxAttempts && this.retryStrategy(e)) {
           await timeout(this.delayStrategy(this._attempts), signal);
         } else {
           err = e;
