@@ -85,6 +85,7 @@ async function request(): Promise<IUser> {
       should be tryed, even maxAttempts has not been reached yet
   - `delayStrategy`: {Function(attempts)} return an integer in ms for which the
       next attempt should be delayed
+  - `signal`: {AbortSignal}
 
 
 #### Custom retry strategy
@@ -107,5 +108,20 @@ await backoff(request, {
   delayStrategy: (attempts) => {
     return Math.min((Math.pow(2, attempts) * 100), 5e3);
   }
+});
+```
+
+#### Aborting a running backoff
+
+Note this does only abort the backoff itself, not the async function passed.
+
+```js
+
+const ac = new AbortController();
+setTimeout(() => ac.abort(), 2e3);
+
+
+await backoff(request, {
+  signal: ac.signal
 });
 ```
