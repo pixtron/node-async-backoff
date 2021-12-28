@@ -1,14 +1,22 @@
 
-const timeout = (ms: number, signal?: AbortSignal) => {
+const timeout = (ms: number, signal?: AbortSignal): Promise<void> => {
   return new Promise((resolve, reject) => {
-    const timeout = setTimeout(resolve, ms);
+    const timeout = setTimeout(() => {
+      if (signal !== undefined) {
+        // @ts-ignore: https://github.com/DefinitelyTyped/DefinitelyTyped/discussions/57805
+        signal.removeEventListener('abort', abortListener);
+      }
+      resolve();
+    }, ms);
+
+    const abortListener = () => {
+      clearTimeout(timeout);
+      reject(abortError());
+    }
 
     if (signal !== undefined) {
       // @ts-ignore: https://github.com/DefinitelyTyped/DefinitelyTyped/discussions/57805
-      signal.addEventListener('abort', () => {
-        clearTimeout(timeout);
-        reject(abortError());
-      }, { once: true });
+      signal.addEventListener('abort', abortListener, { once: true });
     }
   });
 }
@@ -57,15 +65,16 @@ class Backoff {
 
   async tryUntilFail<T>(fn: (...args: unknown[]) => Promise<T>): Promise<T> {
     const signal = this._options.signal;
+    const abortListener = () => {
+      shouldRetry = false;
+      err = abortError();
+    }
     let shouldRetry = true;
     let err: unknown;
 
     if (signal !== undefined) {
       // @ts-ignore: https://github.com/DefinitelyTyped/DefinitelyTyped/discussions/57805
-      signal.addEventListener('abort', () => {
-        shouldRetry = false;
-        err = abortError();
-      }, { once: true });
+      signal.addEventListener('abort', abortListener, { once: true });
     }
 
     while (shouldRetry) {
@@ -75,6 +84,10 @@ class Backoff {
         if (signal?.aborted) throw abortError();
 
         const result = await fn();
+        if (signal !== undefined) {
+          // @ts-ignore: https://github.com/DefinitelyTyped/DefinitelyTyped/discussions/57805
+          signal.removeEventListener('abort', abortListener);
+        }
         return result;
       } catch(e) {
         if (signal?.aborted) throw abortError();
@@ -85,6 +98,11 @@ class Backoff {
           shouldRetry = false;
         }
       }
+    }
+
+    if (signal !== undefined) {
+      // @ts-ignore: https://github.com/DefinitelyTyped/DefinitelyTyped/discussions/57805
+      signal.removeEventListener('abort', abortListener);
     }
 
     throw err;
