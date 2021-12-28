@@ -1,6 +1,6 @@
 {
   "name": "@pxtrn/async-backoff",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "description": "Backoff failing async calls",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
